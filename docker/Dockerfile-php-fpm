@@ -1,0 +1,59 @@
+# Используем готовый образ PHP с FPM
+FROM php:8.2-fpm
+
+# Установка зависимостей и QPDF
+RUN apt-get update && apt-get install -y \
+    zlib1g-dev \
+    libzip-dev \
+    libicu-dev \
+    g++ \
+    unzip \
+    git \
+    curl \
+    libpq-dev \
+    libonig-dev \
+    libxml2-dev \
+    qpdf
+
+# Установка PHP расширений
+RUN docker-php-ext-install zip intl pdo_mysql pdo_pgsql opcache
+
+# Установка Xdebug
+RUN pecl install xdebug && docker-php-ext-enable xdebug
+
+# Установка Composer
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
+# Установка Symfony CLI
+RUN curl -sS https://get.symfony.com/cli/installer | bash && \
+    mv /root/.symfony*/bin/symfony /usr/local/bin/symfony && \
+    chmod +x /usr/local/bin/symfony
+
+# Создание рабочего каталога
+WORKDIR /var/www/html
+
+# Копирование приложения
+COPY ./ /var/www/html
+
+# Проверка наличия composer.json
+RUN ls -la /var/www/html && cat /var/www/html/composer.json
+
+# Создание пользователя
+RUN groupadd -g 1000 www && useradd -u 1000 -ms /bin/bash -g www www
+
+# Установка прав на рабочий каталог
+RUN chown -R www:www /var/www/html
+RUN chmod -R 777 ./var
+
+
+USER root
+
+# Установка PHP расширений для PostgreSQL
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install pdo_pgsql
+
+# Порт, который будет использоваться приложением
+EXPOSE 9000
+
+# Команда, запускающая PHP-FPM
+CMD ["php-fpm"]
