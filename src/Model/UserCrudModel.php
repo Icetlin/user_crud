@@ -14,7 +14,7 @@ class UserCrudModel
         $this->entityManager = $entityManager;
     }
 
-    public function getUserById(int $id): object
+    public function getUserById(int $id): ?User
     {
         return $this->entityManager->getRepository(User::class)->find($id);
     }
