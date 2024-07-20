@@ -31,3 +31,5 @@ curl -X PUT http://localhost:9999/user/1 \
 
 delete
 curl -X DELETE http://localhost:9999/user/1
+
+авторизацию можно добавить по api key + headers
